@@ -2,6 +2,8 @@ import requests
 import json
 import datetime
 
+prevEpgDayCount = 7
+nextEpgDayCount = 2
 
 channelList = []
 
@@ -38,19 +40,21 @@ def initEpgFiles():
     f.close()
 
 
-def writeEpgChannel(id, name, iconId):
+def writeEpgChannel(id, name, iconId, fp):
     if id is None or name is None:
         return
-    f = open("channels.xml", "a", encoding='utf-8')
-    f.write("\t<channel id=\""+str(id)+"\">\n")
-    f.write("\t\t<display-name>"+str(name)+"</display-name>\n")
-    f.write("\t\t<icon src=\"https://jiotv.catchup.cdn.jio.com/dare_images/images/" +
-            str(iconId)+"\"></icon>\n")
-    f.write("\t</channel>\n")
-    f.close()
+
+    name = name.replace("&", "&amp;")
+    # f = open("channels.xml", "a", encoding='utf-8')
+    fp.write("\t<channel id=\""+str(id)+"\">\n")
+    fp.write("\t\t<display-name>"+str(name)+"</display-name>\n")
+    fp.write("\t\t<icon src=\"https://jiotv.catchup.cdn.jio.com/dare_images/images/" +
+             str(iconId)+"\"></icon>\n")
+    fp.write("\t</channel>\n")
+    # f.close()
 
 
-def writeEpgProgram(channelId, start, end, title, description, icon):
+def writeEpgProgram(channelId, start, end, title, description, icon, fp):
     if channelId is None or start is None or end is None or title is None:
         return
     startTime = datetime.datetime.fromtimestamp(int(start/1000))
@@ -59,19 +63,22 @@ def writeEpgProgram(channelId, start, end, title, description, icon):
     endTime = datetime.datetime.fromtimestamp(int(end/1000))
     progEnd = endTime.strftime("%Y%m%d%H%M%S +0000")
 
+    title = title.replace("&", "&amp;")
+    description = description.replace("&", "&amp;")
+
     try:
-        f = open("program.xml", "a", encoding='utf-8')
-        f.write("\t<programme start=\""+str(progStart)+"\" stop=\"" +
-                str(progEnd)+"\" channel=\""+str(channelId) + "\">\n")
-        f.write("\t\t<title lang=\"en\">" + title + "</title>\n")
-        f.write("\t\t<desc lang=\"en\">" + description + "</desc>\n")
-        f.write("\t\t<icon src=\"https://jiotv.catchup.cdn.jio.com/dare_images/shows/" +
-                str(icon)+"\"></icon>\n")
-        f.write("\t</programme>\n")
-        f.close()
+        # f = open("program.xml", "a", encoding='utf-8')
+        fp.write("\t<programme start=\""+str(progStart)+"\" stop=\"" +
+                 str(progEnd)+"\" channel=\""+str(channelId) + "\">\n")
+        fp.write("\t\t<title lang=\"en\">" + title + "</title>\n")
+        fp.write("\t\t<desc lang=\"en\">" + description + "</desc>\n")
+        fp.write("\t\t<icon src=\"https://jiotv.catchup.cdn.jio.com/dare_images/shows/" +
+                 str(icon)+"\"></icon>\n")
+        fp.write("\t</programme>\n")
+        # f.close()
     except UnicodeEncodeError:
         print("it was not a ascii-encoded unicode string")
-        f.close()
+        fp.close()
 
 
 def mergeEpgData():
@@ -91,17 +98,32 @@ def mergeEpgData():
 # Process starts here
 initEpgFiles()
 channelList = getChannels()
+progress = 0
+channelFile = open("channels.xml", "a", encoding='utf-8')
+programFile = open("program.xml", "a", encoding='utf-8')
 for channel in channelList:
     writeEpgChannel(channel["channel_id"],
-                    channel["channel_name"], channel["logoUrl"])
-    lowerRange = -7 if channel["isCatchupAvailable"] else -1
-    for offset in range(0, 1):
+                    channel["channel_name"], channel["logoUrl"], channelFile)
+    lowerRange = 0
+    if prevEpgDayCount > 0:
+        if channel["isCatchupAvailable"]:
+            lowerRange = (prevEpgDayCount*-1)
+        else:
+            lowerRange = -1
+    for offset in range(lowerRange, nextEpgDayCount+1):
         print("Getting EPG for "+str(channel["channel_id"]) +
               " "+channel["channel_name"]+" day "+str(offset))
         epgData = getEpg(channel["channel_id"], offset, 6)
         for epg in epgData:
             writeEpgProgram(channel["channel_id"],
                             epg["startEpoch"], epg["endEpoch"], epg["showname"],
-                            epg["description"], epg["episodePoster"])
+                            epg["description"], epg["episodePoster"], programFile)
+    progress += 1
+    print("\n\nChannel Progress: " + str(progress) +
+          "/"+str(len(channelList))+"\n\n")
+
+channelFile.close()
+programFile.close()
+
 mergeEpgData()
 print("Action complete")
