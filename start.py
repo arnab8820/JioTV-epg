@@ -92,7 +92,7 @@ def writeEpgProgram(channelId, epg, fp):
         if(category):
             fp.write("\t\t<category lang=\"en\">" + category + "</category>\n")
         if(episodeNum):
-            fp.write("\t\t<episode-num system=\"onscreen\">" + episodeNum + "</episode-num>\n")
+            fp.write("\t\t<episode-num system=\"onscreen\">" + str(episodeNum) + "</episode-num>\n")
         fp.write("\t\t<icon src=\"https://jiotv.catchup.cdn.jio.com/dare_images/shows/" +
                  str(epg["episodePoster"])+"\"></icon>\n")
         fp.write("\t</programme>\n")
