@@ -17,14 +17,19 @@ def getChannels():
 
 
 def getEpg(channelId, offset, langId):
-    reqUrl = "https://jiotv.data.cdn.jio.com/apis/v1.3/getepg/get?channel_id=" + \
-        str(channelId)+"&offset="+str(offset)+"&langId="+str(langId)
-    response = requests.get(reqUrl)
-    print("OK: " + str(response.ok) + " status: " + str(response.status_code))
-    if (response.status_code == 200):
-        apiData = json.loads(response.text or "{}")
-        return apiData["epg"]
-    return []
+    try:
+        reqUrl = "https://jiotv.data.cdn.jio.com/apis/v1.3/getepg/get?channel_id=" + \
+            str(channelId)+"&offset="+str(offset)+"&langId="+str(langId)
+        response = requests.get(reqUrl)
+        print("OK: " + str(response.ok) + " status: " + str(response.status_code))
+        if (response.status_code == 200):
+            apiData = json.loads(response.text or "{}")
+            return apiData["epg"]
+        return []
+    except requests.exceptions.Timeout:
+        return []
+    except requests.exceptions.ConnectionError:
+        return []
 
 
 def writeEpgChannel(id, name, iconId, fp):
