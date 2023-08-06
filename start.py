@@ -37,6 +37,10 @@ def writeEpgChannel(id, name, iconId, fp):
         return
 
     name = name.replace("&", "&amp;")
+    name = name.replace("<", "&lt;")
+    name = name.replace(">", "&gt;")
+    name = name.replace("'", "&apos;")
+    name = name.replace('"', "&quot;")
     fp.write("\t<channel id=\""+str(id)+"\">\n")
     fp.write("\t\t<display-name>"+str(name)+"</display-name>\n")
     fp.write("\t\t<icon src=\"https://jiotv.catchup.cdn.jio.com/dare_images/images/" +
@@ -44,25 +48,53 @@ def writeEpgChannel(id, name, iconId, fp):
     fp.write("\t</channel>\n")
 
 
-def writeEpgProgram(channelId, start, end, title, description, icon, fp):
-    if channelId is None or start is None or end is None or title is None:
+def writeEpgProgram(channelId, epg, fp):
+    if channelId is None or epg is None:
         return
-    startTime = datetime.datetime.fromtimestamp(int(start/1000))
+    startTime = datetime.datetime.fromtimestamp(int(epg["startEpoch"]/1000))
     progStart = startTime.strftime("%Y%m%d%H%M%S +0000")
 
-    endTime = datetime.datetime.fromtimestamp(int(end/1000))
+    endTime = datetime.datetime.fromtimestamp(int(epg["endEpoch"]/1000))
     progEnd = endTime.strftime("%Y%m%d%H%M%S +0000")
 
-    title = title.replace("&", "and")
-    description = description.replace("&", "and")
+    title = epg["showname"]
+    title = title.replace("&", "&amp;")
+    title = title.replace("<", "&lt;")
+    title = title.replace(">", "&gt;")
+    title = title.replace("'", "&apos;")
+    title = title.replace('"', "&quot;")
+
+    description = epg["episode_desc"] or epg["description"]
+    description = description.replace("&", "&amp;")
+    description = description.replace("<", "&lt;")
+    description = description.replace(">", "&gt;")
+    description = description.replace("'", "&apos;")
+    description = description.replace('"', "&quot;")
+
+    director = epg["director"]
+    actors = str(epg["starCast"]).split(", ")
+    category = epg["showCategory"]
+    episodeNum = epg["episode_num"]
 
     try:
         fp.write("\t<programme start=\""+str(progStart)+"\" stop=\"" +
                  str(progEnd)+"\" channel=\""+str(channelId) + "\">\n")
         fp.write("\t\t<title lang=\"en\">" + title + "</title>\n")
         fp.write("\t\t<desc lang=\"en\">" + description + "</desc>\n")
+        if(director or len(actors)):
+            fp.write("\t\t<credits>\n")
+            if(director):
+                fp.write("\t\t\t<director>" + director + "</director>\n")
+            if(len(actors)):
+                for actor in actors:
+                    fp.write("\t\t\t<actor>" + actor + "</actor>\n")
+            fp.write("\t\t</credits>\n")
+        if(category):
+            fp.write("\t\t<category lang=\"en\">" + category + "</category>\n")
+        if(episodeNum):
+            fp.write("\t\t<episode-num system=\"onscreen\">" + episodeNum + "</episode-num>\n")
         fp.write("\t\t<icon src=\"https://jiotv.catchup.cdn.jio.com/dare_images/shows/" +
-                 str(icon)+"\"></icon>\n")
+                 str(epg["episodePoster"])+"\"></icon>\n")
         fp.write("\t</programme>\n")
     except UnicodeEncodeError:
         print("it was not a ascii-encoded unicode string")
@@ -78,9 +110,7 @@ def grabEpgAllChannel(day):
               " "+channel["channel_name"]+" day "+str(day))
         epgData = getEpg(channel["channel_id"], day, 6)
         for epg in epgData:
-            writeEpgProgram(channel["channel_id"],
-                            epg["startEpoch"], epg["endEpoch"], epg["showname"],
-                            epg["description"], epg["episodePoster"], programFile)
+            writeEpgProgram(channel["channel_id"], epg, programFile)
         progress += 1
         print("progress "+str(progress)+"/"+str(len(channelList)))
     programFile.close()
