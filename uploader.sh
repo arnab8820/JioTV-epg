@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /mnt/data/JioTV-epg
+#cd /home/arnab/JioTV-epg
 python3 start.py
 gzip -f ./epg.xml
 git add epg.xml.gz
