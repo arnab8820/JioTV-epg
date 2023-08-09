@@ -141,7 +141,6 @@ def mergeEpgData():
     epgFile.write(
         "<tv generator-info-name=\"Arnab Ghosh\" generator-info-url=\"https://github.com/arnab8820\">\n")
     epgFile.write(channelsFile.read())
-    channelsFile.close()
     for day in range((prevEpgDayCount * -1), nextEpgDayCount):
         if (os.path.isfile('./program' + str(day) + '.xml')):
             programsFile = open('./program' + str(day) +
@@ -150,7 +149,22 @@ def mergeEpgData():
             programsFile.close()
 
     epgFile.write("</tv>\n")
+    epgFile.close()
 
+    # create single day epg
+    epgFile1d = open("epg1d.xml", "a", encoding='utf-8')
+    epgFile1d.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
+    epgFile1d.write("<!DOCTYPE tv SYSTEM \"xmltv.dtd\">\n")
+    epgFile1d.write(
+        "<tv generator-info-name=\"Arnab Ghosh\" generator-info-url=\"https://github.com/arnab8820\">\n")
+    epgFile1d.write(channelsFile.read())
+    channelsFile.close()
+    if (os.path.isfile('./program0.xml')):
+            programsFile = open('./program0.xml', "r", encoding='utf-8')
+            epgFile1d.write(programsFile.read())
+            programsFile.close()
+    epgFile1d.write("</tv>\n")
+    epgFile1d.close()
 
 # Process starts here
 channelList = getChannels()
