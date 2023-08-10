@@ -149,9 +149,11 @@ def mergeEpgData():
             programsFile.close()
 
     epgFile.write("</tv>\n")
+    channelsFile.close()
     epgFile.close()
 
     # create single day epg
+    channelsFile = open("channels.xml", "r", encoding='utf-8')
     epgFile1d = open("epg1d.xml", "a", encoding='utf-8')
     epgFile1d.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
     epgFile1d.write("<!DOCTYPE tv SYSTEM \"xmltv.dtd\">\n")
