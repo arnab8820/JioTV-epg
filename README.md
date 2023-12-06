@@ -3,7 +3,7 @@
 This repository contains XML guide data for using with JioTv m3u playlist
 
 Features:
-1. Contains EPG data from past 7 days to next 2 days
+1. Contains EPG data from past 7 days to next 2 days2
 2. Daily updated
 3. Contains EPG for all channels
 
