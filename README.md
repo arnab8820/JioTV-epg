@@ -1,6 +1,6 @@
 # JioTV-epg
 
-This repository contains XML guide data for using with JioTv m3u playlist
+This repository contains XML guide data for using with JioTv m3u playlistedff
 
 Features:
 1. Contains EPG data from past 7 days to next 2 days
